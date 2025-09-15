@@ -53,7 +53,7 @@ class Value:
     return self * other**-1
   
   def __rtruediv__(self, other):
-    return self * other**-1
+    return other * self**-1
   
   def __pow__(self, other):
     assert isinstance(other, (int, float)), "support for int/float only"
