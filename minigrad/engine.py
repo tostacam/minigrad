@@ -26,6 +26,9 @@ class Value:
   def __radd__(self, other):
     return self + other
   
+  def __neg__(self, ):
+    return self * -1
+  
   def __sub__(self, other):
     return self + (-1*other)
   
@@ -62,7 +65,15 @@ class Value:
 
     return out
      
-  
+  def relu(self):
+    out = Value(0 if self.data < 0 else self.data, (self, ), 'RelU')
+    
+    def _backward():
+      self.grad += (self.data > 0) * out.grad
+    out._backward = _backward
+
+    return out
+
   def tanh(self):
     x = self.data
     t = (math.exp(2*x) - 1)/(math.exp(2*x) + 1)
