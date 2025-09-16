@@ -1,5 +1,5 @@
 import random
-from engine import Value
+from .engine import Value
 
 class Neuron:
   def __init__(self, nin):
@@ -46,3 +46,7 @@ class MLP:
       p = layer.parameters()
       params.extend(p)
     return params
+  
+  def zero_grad(self):
+    for p in self.parameters():
+      p.grad = 0.0
