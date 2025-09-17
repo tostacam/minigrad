@@ -64,12 +64,14 @@ class Value:
     out._backward = _backward
 
     return out
-     
-  def relu(self):
-    out = Value(0 if self.data < 0 else self.data, (self, ), 'RelU')
-    
+  
+  def sigmoid(self):
+    x = self.data
+    s = 1 / (1 + math.exp(-x))
+    out = Value(s, (self, ), 'sigmoid')
+
     def _backward():
-      self.grad += (self.data > 0) * out.grad
+      self.grad += (s * (1 - s)) * out.grad
     out._backward = _backward
 
     return out
@@ -84,7 +86,37 @@ class Value:
     out._backward = _backward
 
     return out
+       
+  def relu(self):
+    out = Value(0 if self.data < 0 else self.data, (self, ), 'ReLU')
+    
+    def _backward():
+      self.grad += (self.data > 0) * out.grad
+    out._backward = _backward
+
+    return out
   
+  def leaky_relu(self):
+    out = Value(0.1*self.data if self.data < 0 else self.data, (self, ), 'LReLU')
+
+    def _backward():
+      if self.data < 0:
+        self.grad += 0.1 * out.grad
+      else:
+        self.grad += 1.0 * out.grad
+    out._backward = _backward
+
+    return out
+  
+  def linear(self):
+    out = Value(self.data, (self, ), 'linear')
+
+    def _backward():
+      self.grad += 1.0 * out.grad
+    out._backward = _backward
+
+    return out 
+
   def exp(self):
     x = self.data
     out = Value(math.exp(x), (self, ), 'exp')

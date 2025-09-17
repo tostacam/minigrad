@@ -2,16 +2,26 @@ import random
 from .engine import Value
 
 class Neuron:
-  def __init__(self, nin, linear=True):
+  def __init__(self, nin, activation='linear'):
     self.w = [Value(random.uniform(-1,1), label='w') for _ in range(nin)]
     self.b = Value(random.uniform(-1,1), label='b')
-    self.linear = linear
+    self.activation = activation
 
   def __call__(self, x):
     # w * x + b
     act = sum([wi * xi for wi, xi in zip(self.w, x)], start=self.b)
     act.label = 'neuron(xi): ' + ' '.join(map(str,x))
-    return act if self.linear else act.relu()
+    if self.activation == 'sigmoid':
+      act.sigmoid()
+    elif self.activation == 'tanh':
+      act.tanh()
+    elif self.activation == 'relu':
+      act.relu()
+    elif self.activation == 'leaky_rely':
+      act.leaky_relu()
+    else:
+      act.linear()
+    return act
   
   def __repr__(self):
     return f"Neuron({len(self.w)})"
@@ -38,9 +48,14 @@ class Layer:
     return params
 
 class MLP:
-  def __init__(self, nin, nouts):
+  def __init__(self, nin, nouts, activations=None):
     sz = [nin] + nouts
-    self.layers = [Layer(sz[i], sz[i+1], linear=True) for i in range(len(nouts))]
+
+    # default nn -> linear for all layers
+    if activations is None:
+      activations = ["linear"] * len(nouts)
+
+    self.layers = [Layer(sz[i], sz[i+1], activation=activations[i]) for i in range(len(nouts))]
 
   def __call__(self, x):
     for layer in self.layers:
