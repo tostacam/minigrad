@@ -6,22 +6,24 @@ class Neuron:
     self.w = [Value(random.uniform(-1,1), label='w') for _ in range(nin)]
     self.b = Value(random.uniform(-1,1), label='b')
     self.activation = activation
+    self.z = None
+    self.out = None
 
   def __call__(self, x):
-    # w * x + b
-    act = sum([wi * xi for wi, xi in zip(self.w, x)], start=self.b)
-    act.label = 'neuron(xi): ' + ' '.join(map(str,x))
+    # z = w * x + b
+    self.z = sum([wi * xi for wi, xi in zip(self.w, x)], start=self.b)
+    self.z.label = 'pre-activation'
     if self.activation == 'sigmoid':
-      act.sigmoid()
+      self.out = self.z.sigmoid()
     elif self.activation == 'tanh':
-      act.tanh()
+      self.out = self.z.tanh()
     elif self.activation == 'relu':
-      act.relu()
+      self.out = self.z.relu()
     elif self.activation == 'leaky_rely':
-      act.leaky_relu()
+      self.out = self.z.leaky_relu()
     else:
-      act.linear()
-    return act
+      self.out = self.z.linear()
+    return self.out
   
   def __repr__(self):
     return f"Neuron({len(self.w)})"
@@ -29,8 +31,11 @@ class Neuron:
   def parameters(self):
     return self.w + [self.b]
   
-  def print_neuron(self, i):
-    print(f"\033[32mNeuron({i+1}) -> \033[0m")
+  def print_neuron(self, i, forward=False):
+    if forward:
+      print(f"\033[32mNeuron({i+1}) -> z={self.z.data:.4f} -> {self.activation} -> out={self.out.data:.4f}\033[0m")
+    else:
+      print(f"\033[32mNeuron({i+1}) -> \033[0m")
     params = self.parameters()
     for k, parameter in enumerate(params):
       print(f"  w[{k}] = {parameter.data:.4f}" if k != (len(params)-1) else f"  b = {parameter.data:.4f}")
@@ -57,10 +62,10 @@ class Layer:
       params.extend(ps)
     return params
   
-  def print_layer(self, i):
+  def print_layer(self, i, forward=False):
     print(f"\033[35m{i+1}.Layer ({self.nin}, {self.nout}){f" -> {self.activation}" if self.activation else ''}:\033[0m")
     for j, neuron in enumerate(self.neurons):
-      neuron.print_neuron(j)
+      neuron.print_neuron(j, forward)
     return
 
 class MLP:
@@ -91,12 +96,14 @@ class MLP:
       params.extend(p)
     return params
   
-  def print_nn(self):
+  def print_nn(self, forward=False):
     if len(self.nouts) == len(self.activations):
       print(f"\033[36mMLP architecture: inputs({self.nin}) -> {' -> '.join([f'Layer({m}, {n})' for m, n in zip(self.nouts, self.activations)])}\033[0m")
+    else:
+      print(f"\033[36mMLP architecture: inputs({self.nin}) -> {' -> '.join([f'Layer({m}, linear)' for m in self.nouts])}\033[0m")
 
     for i, layer in enumerate(self.layers):
-      layer.print_layer(i)
+      layer.print_layer(i, forward)
     
     return None
   
