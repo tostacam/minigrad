@@ -8,7 +8,7 @@ x_train = [[0,0],[0,1],[1,0],[1,1]]
 y_train = [0,1,1,0]
 
 # NN definition
-model = MLP(2, [4, 1])
+model = MLP(2, [4, 1], activations=['linear', 'linear'])
 print("number of parameters: ", len(model.parameters()))
 
 # hyperparameters
