@@ -96,7 +96,7 @@ def test_intermediate_gradients():
 def test_mlp_against_pytorch():
     tol = 1e-5
 
-    """# Dataset
+    # dataset
     xs = [[0.5, -1.0], [1.0, 2.0]]
     ys = [[1.0], [0.0]]
 
@@ -111,35 +111,16 @@ def test_mlp_against_pytorch():
         nn.ReLU(),
         nn.Linear(4, 1)
     )
-    torch_mlp.double()"""
-
-    xs = [[0.5, -1.0], [1.0, 2.0]]
-    ys = [[1.0], [0.0]]
-
-    # minigrad
-    mg_mlp = MLP(2, [2, 1], activations=['linear','linear'])
-
-    # pytorch
-    torch_mlp = nn.Sequential(
-        nn.Linear(2, 2),
-        nn.Linear(2, 1)
-    )
     torch_mlp.double()
 
     # matching weights on pytorch
     with torch.no_grad():
         for mg_layer, torch_layer in zip(mg_mlp.layers, [layer for layer in torch_mlp if isinstance(layer, nn.Linear)]):
-            print(mg_layer, "\n", torch_layer)
             if isinstance(torch_layer, nn.Linear):
                 # weights
                 torch_layer.weight.copy_(torch.tensor([[w.data for w in neuron.w] for neuron in mg_layer.neurons], dtype=torch.double))
                 # biases
                 torch_layer.bias.copy_(torch.tensor([neuron.b.data for neuron in mg_layer.neurons], dtype=torch.double))
-
-    mg_mlp.print_nn()
-
-    for name, p in torch_mlp.named_parameters():
-        print(f"{name} {p.shape}\n{p}\n")
 
     # forward minigrad
     mg_outputs = []
@@ -151,9 +132,6 @@ def test_mlp_against_pytorch():
     # forward pytorch
     x_tensor = torch.tensor(xs, dtype=torch.double, requires_grad=True)
     torch_outputs = torch_mlp(x_tensor)
-
-    print(mg_outputs)
-    print(torch_outputs.detach().numpy())
 
     # loss
     mg_loss = Value(0.0)
