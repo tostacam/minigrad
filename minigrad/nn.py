@@ -29,9 +29,19 @@ class Neuron:
   def parameters(self):
     return self.w + [self.b]
   
+  def print_neuron(self, i):
+    print(f"\033[32mNeuron({i+1}) -> \033[0m")
+    params = self.parameters()
+    for k, parameter in enumerate(params):
+      print(f"  w[{k}] = {parameter.data:.4f}" if k != (len(params)-1) else f"  b = {parameter.data:.4f}")
+    return
+  
 class Layer:
-  def __init__(self, nin, nout, **kwargs):
-    self.neurons = [Neuron(nin, **kwargs) for _ in range(nout)]
+  def __init__(self, nin, nout, activation):
+    self.neurons = [Neuron(nin, activation) for _ in range(nout)]
+    self.nin = nin
+    self.nout = nout
+    self.activation = activation
 
   def __call__(self, x):
     outs = [n(x) for n in self.neurons]
@@ -46,9 +56,18 @@ class Layer:
       ps = neuron.parameters()
       params.extend(ps)
     return params
+  
+  def print_layer(self):
+    print(f"\033[35mLayer ({self.nin}, {self.nout}){f" -> {self.activation}" if self.activation else ''}:\033[0m")
+    for i, neuron in enumerate(self.neurons):
+      neuron.print_neuron(i)
+    return
 
 class MLP:
   def __init__(self, nin, nouts, activations=None):
+    self.nin = nin
+    self.nouts = nouts
+    self.activations = activations
     sz = [nin] + nouts
 
     # default nn -> linear for all layers
@@ -71,6 +90,15 @@ class MLP:
       p = layer.parameters()
       params.extend(p)
     return params
+  
+  def print_nn(self):
+    if len(self.nouts) == len(self.activations):
+      print(f"\033[36mMLP architecture: inputs({self.nin}) -> {' -> '.join([f'Layer({m}, {n})' for m, n in zip(self.nouts, self.activations)])}\033[0m")
+
+    for layer in self.layers:
+      layer.print_layer()
+    
+    return None
   
   def zero_grad(self):
     for p in self.parameters():
