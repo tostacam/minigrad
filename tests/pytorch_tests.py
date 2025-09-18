@@ -101,15 +101,16 @@ def test_mlp_against_pytorch():
     ys = [[1.0], [0.0]]
 
     # minigrad
-    mg_mlp = MLP(2, [4, 4, 1], activations=['relu','relu','linear'])
+    mg_mlp = MLP(2, [3, 2, 1], activations=['tanh','relu','sigmoid'])
 
     # pytorch
     torch_mlp = nn.Sequential(
-        nn.Linear(2, 4),
+        nn.Linear(2, 3),
+        nn.Tanh(),
+        nn.Linear(3, 2),
         nn.ReLU(),
-        nn.Linear(4, 4),
-        nn.ReLU(),
-        nn.Linear(4, 1)
+        nn.Linear(2, 1),
+        nn.Sigmoid()
     )
     torch_mlp.double()
 
