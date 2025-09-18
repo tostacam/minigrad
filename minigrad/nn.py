@@ -57,10 +57,10 @@ class Layer:
       params.extend(ps)
     return params
   
-  def print_layer(self):
-    print(f"\033[35mLayer ({self.nin}, {self.nout}){f" -> {self.activation}" if self.activation else ''}:\033[0m")
-    for i, neuron in enumerate(self.neurons):
-      neuron.print_neuron(i)
+  def print_layer(self, i):
+    print(f"\033[35m{i+1}.Layer ({self.nin}, {self.nout}){f" -> {self.activation}" if self.activation else ''}:\033[0m")
+    for j, neuron in enumerate(self.neurons):
+      neuron.print_neuron(j)
     return
 
 class MLP:
@@ -95,8 +95,8 @@ class MLP:
     if len(self.nouts) == len(self.activations):
       print(f"\033[36mMLP architecture: inputs({self.nin}) -> {' -> '.join([f'Layer({m}, {n})' for m, n in zip(self.nouts, self.activations)])}\033[0m")
 
-    for layer in self.layers:
-      layer.print_layer()
+    for i, layer in enumerate(self.layers):
+      layer.print_layer(i)
     
     return None
   
