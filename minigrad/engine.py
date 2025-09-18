@@ -97,11 +97,11 @@ class Value:
     return out
   
   def leaky_relu(self):
-    out = Value(0.1*self.data if self.data < 0 else self.data, (self, ), 'LReLU')
+    out = Value(0.01*self.data if self.data < 0 else self.data, (self, ), 'LReLU')
 
     def _backward():
       if self.data < 0:
-        self.grad += 0.1 * out.grad
+        self.grad += 0.01 * out.grad
       else:
         self.grad += 1.0 * out.grad
     out._backward = _backward
