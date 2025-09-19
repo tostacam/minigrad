@@ -33,7 +33,7 @@ class Neuron:
   
   def print_neuron(self, i, forward=False):
     if forward:
-      print(f"\033[32mNeuron({i+1}) -> z={self.z.data:.4f} -> {self.activation} -> out={self.out.data:.4f}\033[0m")
+      print(f"\033[32mNeuron({i+1}) -> z={(self.z.data if self.z is not None else 0.0):.4f} -> {self.activation} -> out={(self.out.data if self.out is not None else 0.0):.4f}\033[0m")
     else:
       print(f"\033[32mNeuron({i+1}) -> \033[0m")
     params = self.parameters()
