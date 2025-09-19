@@ -127,6 +127,36 @@ class Value:
 
     return out
   
+  def log(self):
+    x = self.data
+    out = Value(math.log(x), (self, ), 'log')
+
+    def _backward():
+      self.grad += (1 / (x * math.log(10))) * out.grad
+    out._backward = _backward
+
+    return out
+  
+  def softmax_cross_entropy(self, logits, targets):
+
+    exps = [logit.exp() for logit in logits]
+    s = sum(exps)
+    softmax = [e / s for e in exps]
+
+    loss_value = 0.0
+    for sft, y in zip(softmax, targets):
+      if y == 1:
+        loss_value = -math.log(sft.data)
+        break
+    loss = Value(loss_value, tuple(logits), 'softmax_cross_entropy')
+
+    def _backward():
+      for logit, y, sft in zip(logits, targets, softmax):
+        logit.grad += (sft.data - y) * logit.grad
+    loss._backward = _backward
+
+    return loss
+
   def backward(self):
     
     # topological sort
@@ -136,7 +166,11 @@ class Value:
       if v not in visited:
         visited.add(v)
         for child in v._prev:
-          build_topo(child)
+          if isinstance(child, list):
+            for c in child:
+              build_topo(c)
+          else:
+            build_topo(child)
         topo.append(v)
     build_topo(self)
 
