@@ -149,11 +149,124 @@ def test_mlp_against_pytorch():
     mg_loss.backward()
     torch_loss.backward()
 
-    # comparison
+    # comparison -> outputs
     for mg_out, torch_out in zip(mg_outputs, torch_outputs.detach().numpy()):
         assert abs(mg_out.data - torch_out[0]) < tol, f"Output mismatch: [minigrad {mg_out.data}, pytorch {torch_out[0]}]"
 
-    # Compare gradients of first layer weights and biases
+    # comparison -> gradients
+    first_layer = mg_mlp.layers[0]
+    torch_first_linear = torch_mlp[0]
+
+    for i, neuron in enumerate(first_layer.neurons):
+        for j, w in enumerate(neuron.w):
+            torch_grad = torch_first_linear.weight.grad[i, j].item()
+            mg_grad = w.grad
+            assert abs(mg_grad - torch_grad) < tol, f"Weight gradient mismatch at layer 0 neuron {i} weight {j}: minigrad {mg_grad}, pytorch {torch_grad}"
+        torch_bias_grad = torch_first_linear.bias.grad[i].item()
+        mg_bias_grad = neuron.b.grad
+        assert abs(mg_bias_grad - torch_bias_grad) < tol, f"Bias gradient mismatch at layer 0 neuron {i}: minigrad {mg_bias_grad}, pytorch {torch_bias_grad}"
+
+def test_softmax_against_pytorch():
+    tol = 1e-6
+
+    # inputs -> logits
+    logits_data = [[1.0, 2.0, 3.0], [0.5, 1.5, -1.0]]
+    logits = [[Value(v) for v in row] for row in logits_data]
+
+    # forward minigrad
+    mg_softmax_outputs = []
+    for row in logits:
+        exps = [x.exp() for x in row]
+        sum_exp = Value(0.0)
+        for e in exps:
+            sum_exp += e
+        softmax_row = [e / sum_exp for e in exps]
+        mg_softmax_outputs.append(softmax_row)
+
+    # forward pytorch
+    logits_tensor = torch.tensor(logits_data, dtype=torch.double, requires_grad=True)
+    torch_softmax_outputs = nn.functional.softmax(logits_tensor, dim=1)
+
+    # comparison -> outputs
+    for i in range(len(logits_data)):
+        for j in range(len(logits_data[0])):
+            mg_val = mg_softmax_outputs[i][j].data
+            torch_val = torch_softmax_outputs[i, j].item()
+            assert abs(mg_val - torch_val) < tol, f"Softmax output mismatch at ({i},{j}): minigrad {mg_val}, pytorch {torch_val}"
+
+    # backward
+    mg_loss = Value(0.0)
+    for row in mg_softmax_outputs:
+        for val in row:
+            mg_loss += val
+    mg_loss.backward()
+
+    torch_loss = torch_softmax_outputs.sum()
+    torch_loss.backward()
+
+    # comparison -> gradients
+    for i in range(len(logits_data)):
+        for j in range(len(logits_data[0])):
+            mg_grad = logits[i][j].grad
+            torch_grad = logits_tensor.grad[i, j].item()
+            assert abs(mg_grad - torch_grad) < tol, f"Softmax gradient mismatch at ({i},{j}): minigrad {mg_grad}, pytorch {torch_grad}"
+
+def test_mlp_softmax_against_pytorch():
+    tol = 1e-5
+
+    # dataset
+    xs = [[0.5, -1.0], [1.0, 2.0]]
+    ys = [[1, 0, 0], [0, 1, 0]]
+
+    # minigrad MLP
+    mg_mlp = MLP(2, [2, 3], activations=['relu', 'softmax'])  # last layer softmax applied directly
+
+    # pytorch MLP
+    torch_mlp = nn.Sequential(
+        nn.Linear(2, 2),
+        nn.ReLU(),
+        nn.Linear(2, 3),
+    )
+    torch_mlp.double()
+
+    # matching weights on pytorch
+    with torch.no_grad():
+        for mg_layer, torch_layer in zip(mg_mlp.layers, [layer for layer in torch_mlp if isinstance(layer, nn.Linear)]):
+            torch_layer.weight.copy_(torch.tensor([[w.data for w in neuron.w] for neuron in mg_layer.neurons], dtype=torch.double))
+            torch_layer.bias.copy_(torch.tensor([neuron.b.data for neuron in mg_layer.neurons], dtype=torch.double))
+
+    # forward minigrad
+    mg_outputs = []
+    for x in xs:
+        x_vals = [Value(v) for v in x]
+        out = mg_mlp(x_vals)
+        mg_outputs.append(out)
+
+    # forward pytorch
+    x_tensor = torch.tensor(xs, dtype=torch.double, requires_grad=True)
+    torch_logits = torch_mlp(x_tensor)
+    torch_softmax = nn.functional.softmax(torch_logits, dim=1)
+
+    # compute cross-entropy loss minigrad
+    mg_loss = Value(0.0)
+    for out, y in zip(mg_outputs, ys):
+        mg_loss += -sum([y_logit.log() if ygt == 1 else 0 for y_logit, ygt in zip(out, y)])
+    mg_loss /= len(mg_outputs)
+
+    # compute cross-entropy loss pytorch
+    y_tensor = torch.tensor(ys, dtype=torch.double)
+    torch_loss = -(y_tensor * torch_softmax.log()).sum(dim=1).mean()
+
+    # backward
+    mg_loss.backward()
+    torch_loss.backward()
+
+    # compare outputs
+    for mg_out, torch_out in zip(mg_outputs, torch_softmax.detach().numpy()):
+        for mg_val, torch_val in zip(mg_out, torch_out):
+            assert abs(mg_val.data - torch_val) < tol, f"Softmax output mismatch: minigrad {mg_val.data}, pytorch {torch_val}"
+
+    # compare gradients of first layer weights and biases
     first_layer = mg_mlp.layers[0]
     torch_first_linear = torch_mlp[0]
 
@@ -169,3 +282,5 @@ def test_mlp_against_pytorch():
 test_activation_functions()
 test_intermediate_gradients()
 test_mlp_against_pytorch()
+test_softmax_against_pytorch()
+test_mlp_softmax_against_pytorch()
