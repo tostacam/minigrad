@@ -50,7 +50,15 @@ class Value:
     return self * other
   
   def __truediv__(self, other):
-    return self * other**-1
+    other = other if isinstance(other, Value) else Value(other)
+    out = Value(self.data / other.data, (self, other), '/')
+
+    def _backward():
+      self.grad += (1.0 / other.data) * out.grad
+      other.grad += -(self.data / (other.data**2)) * out.grad
+    out._backward =_backward
+
+    return out
   
   def __rtruediv__(self, other):
     return other * self**-1
@@ -132,11 +140,12 @@ class Value:
     out = Value(math.log(x), (self, ), 'log')
 
     def _backward():
-      self.grad += (1 / (x * math.log(10))) * out.grad
+      self.grad += (1 / x) * out.grad
     out._backward = _backward
 
     return out
   
+  """
   def softmax_cross_entropy(self, logits, targets):
 
     exps = [logit.exp() for logit in logits]
@@ -156,6 +165,7 @@ class Value:
     loss._backward = _backward
 
     return loss
+  """
 
   def backward(self):
     
