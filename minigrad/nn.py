@@ -24,7 +24,7 @@ class Neuron:
     if type == 'forward':
       print(f"\033[32mNeuron({i+1}) -> z={(self.z.data if self.z is not None else 0.0):.4f}\033[0m")
     else:
-      print(f"\033[32mNeuron({i+1}) -> \033[0m")
+      print(f"\033[32mNeuron({i+1}) -> gradients \033[0m")
     params = self.parameters()
     for k, parameter in enumerate(params):
       if type == 'forward':
