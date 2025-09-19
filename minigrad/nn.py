@@ -97,7 +97,7 @@ class MLP:
     return params
   
   def print_nn(self, forward=False):
-    if len(self.nouts) == len(self.activations):
+    if self.activations and (len(self.nouts) == len(self.activations)):
       print(f"\033[36mMLP architecture: inputs({self.nin}) -> {' -> '.join([f'Layer({m}, {n})' for m, n in zip(self.nouts, self.activations)])}\033[0m")
     else:
       print(f"\033[36mMLP architecture: inputs({self.nin}) -> {' -> '.join([f'Layer({m}, linear)' for m in self.nouts])}\033[0m")
