@@ -144,28 +144,6 @@ class Value:
     out._backward = _backward
 
     return out
-  
-  """
-  def softmax_cross_entropy(self, logits, targets):
-
-    exps = [logit.exp() for logit in logits]
-    s = sum(exps)
-    softmax = [e / s for e in exps]
-
-    loss_value = 0.0
-    for sft, y in zip(softmax, targets):
-      if y == 1:
-        loss_value = -math.log(sft.data)
-        break
-    loss = Value(loss_value, tuple(logits), 'softmax_cross_entropy')
-
-    def _backward():
-      for logit, y, sft in zip(logits, targets, softmax):
-        logit.grad += (sft.data - y) * logit.grad
-    loss._backward = _backward
-
-    return loss
-  """
 
   def backward(self):
     
