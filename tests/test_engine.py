@@ -1,13 +1,9 @@
 import torch
-import minigrad as mg
 from minigrad import Value
 
 # ------------------------------
-def print_error(t, color='red'):
-  if color == "red":
-    print(f"\033[31m{t}\033[0m") 
-  elif color == "cyan":
-    print(f"\033[36m{t}\033[0m")
+def print_error(t):
+  print(f"\033[31m{t}\033[0m") 
 # ------------------------------  
 
 def test_basic_ops():
