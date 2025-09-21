@@ -53,8 +53,6 @@ def test_math_ops():
   assert x_mg.grad == x_pt.grad.item(), print_error(f"Gradient mismatch: [minigrad: {x_mg.grad}, pytorch: {x_pt.grad.item()}]")
 
 def test_activation_functions():
-  
-  tol = 1e-6
 
   # testing -> sigmoid
   x = Value(0.5)
