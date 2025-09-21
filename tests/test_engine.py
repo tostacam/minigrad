@@ -3,7 +3,7 @@ from minigrad import Value
 
 # ------------------------------
 def print_error(t):
-  print(f"\033[31m{t}\033[0m") 
+  return f"\033[31m{t}\033[0m"
 # ------------------------------  
 
 def test_basic_ops():
