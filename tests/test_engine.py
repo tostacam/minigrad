@@ -32,14 +32,29 @@ def test_basic_ops():
   y.backward()
   x_pt, y_pt = x, y 
 
-  assert y_mg.data == y_pt.data.item(), print_error(f"Output mistmatch: [minigrad: {y_mg.data}, pytorch: {y_pt.data.item()}]")
-  assert x_mg.grad == x_pt.grad.item(), print_error(f"Gradient mism")
+  assert y_mg.data == y_pt.data.item(), print_error(f"Output mismatch: [minigrad: {y_mg.data}, pytorch: {y_pt.data.item()}]")
+  assert x_mg.grad == x_pt.grad.item(), print_error(f"Gradient mismatch: [minigrad: {x_mg.grad}, pytorch: {x_pt.grad.item()}]")
 
-def test_activation_functions():
-  pass
+def test_math_ops():
 
-  # TODO: testing -> tanh, relu, 
+  # testing -> exp, log
+  x = Value(4.0)
+  z = x.exp()
+  v = z + 2
+  y = v.log()
+  y.backward()
+  x_mg, y_mg = x, y
 
+  x = torch.Tensor([4.0]).double()
+  x.requires_grad = True
+  z = x.exp()
+  v = z + 2
+  y = v.log()
+  y.backward()
+  x_pt, y_pt = x, y
+
+  assert y_mg.data == y_pt.data.item(), print_error(f"Output mismatch: [minigrad: {y_mg.data}, pytorch: {y_pt.data.item()}]")
+  assert x_mg.grad == x_pt.grad.item(), print_error(f"Gradient mismatch: [minigrad: {x_mg.grad}, pytorch: {x_pt.grad.item()}]")
 
 test_basic_ops()
-test_activation_functions()
+test_math_ops()
