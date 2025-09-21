@@ -32,8 +32,6 @@ def test_basic_ops():
   y.backward()
   x_pt, y_pt = x, y 
 
-  # TODO: fix rsub issue
-
   assert y_mg.data == y_pt.data.item(), print_error(f"Output mistmatch: [minigrad: {y_mg.data}, pytorch: {y_pt.data.item()}]")
   assert x_mg.grad == x_pt.grad.item(), print_error(f"Gradient mism")
 

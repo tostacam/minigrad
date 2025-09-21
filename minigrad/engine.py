@@ -30,10 +30,11 @@ class Value:
     return self * -1
   
   def __sub__(self, other):
-    return self + (-1*other)
+    other = other if isinstance(other, Value) else Value(other)
+    return self + (other * (-1))
   
   def __rsub__(self, other):
-    return self - other
+    return other + (self * (-1))
   
   def __mul__(self, other):
     other = other if isinstance(other, Value) else Value(other)
