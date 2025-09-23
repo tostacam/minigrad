@@ -1,5 +1,5 @@
 import torch
-from minigrad import Neuron, Layer, MLP
+from minigrad import Value, Neuron, Layer, MLP
 
 # ------------------------------
 def print_error(t):
@@ -7,7 +7,6 @@ def print_error(t):
 # ------------------------------
 
 def test_neuron():
-
   tol = 1e-6
 
   # testing -> z = w * x + b, w[0].grad
@@ -23,7 +22,7 @@ def test_neuron():
       pt_neuron.weight.copy_(torch.tensor([w.data for w in mg_neuron.w], dtype=torch.double))
       pt_neuron.bias.copy_(torch.tensor([mg_neuron.b.data], dtype=torch.double))
 
-  #outputs
+  # forward
   mg_pred = mg_neuron(xs)
   pt_pred = pt_neuron(pt_input)
 
@@ -33,8 +32,35 @@ def test_neuron():
 
   assert abs(mg_pred.data - pt_pred.data.item()) < tol, print_error(f"Output mismatch: [minigrad: {mg_pred.data}, pytorch: {pt_pred.data.item()}]")
   assert abs(mg_neuron.w[0].grad - pt_neuron.weight.grad[0,0].item()) < tol, print_error(f"Gradient mismatch: [minigrad: {mg_neuron.w[0].grad}, pytorch: {pt_neuron.weight.grad[0,0].item()}]")
+
+def test_layer():
+  tol = 1e-6
+
+  # testing -> z = W *x + b, neuron[0].w[0].grad
+  xs = [2.0, -0.5, 3.0]
+
+  # minigrad layer
+  mg_layer = Layer(3, 4)
+
+  # pytorch neuron + matching params
+  pt_input = torch.tensor(xs, dtype=torch.double, requires_grad=True).unsqueeze(0)
+  pt_layer = torch.nn.Linear(in_features=3, out_features=4, dtype=torch.double)
+  with torch.no_grad():
+      pt_layer.weight.copy_(torch.tensor([[w.data for w in neuron.w] for neuron in mg_layer.neurons], dtype=torch.double))
+      pt_layer.bias.copy_(torch.tensor([neuron.b.data for neuron in mg_layer.neurons], dtype=torch.double))
   
-  mg_neuron.print_neuron()
-  mg_neuron.print_neuron(type='grad')
+  # forward
+  mg_sum = Value(0.0)
+  mg_forward = [v for v in mg_layer([Value(x) for x in xs])]
+  mg_pred = mg_sum.sum(mg_forward)
+  pt_pred = pt_layer(pt_input)
+
+  # backward
+  mg_pred.backward()
+  pt_pred.sum().backward()
+
+  assert all(abs(mg_forward[i].data - pt_pred[0, i].item()) < tol for i in range(4)), print_error(f"Output mismatch: [minigrad: {mg_sum}, pytorch: {pt_pred}]")
+  assert abs(mg_layer.neurons[0].w[0].grad - pt_layer.weight.grad[0,0].item()) < tol, print_error(f"Gradient mismatch: [minigrad: {mg_layer.neurons[0].w[0].grad}, pytorch: {pt_layer.weight.grad[0,0].item()}]")
 
 test_neuron()
+test_layer()
