@@ -146,6 +146,16 @@ class Value:
 
     return out
 
+  def sum(self, xs):
+    out = Value(sum([x.data for x in xs]), (self, xs), 'sum')
+
+    def _backward():
+      for x in xs:
+        x.grad += 1.0 * out.grad
+    out._backward = _backward
+
+    return out
+
   def backward(self):
     
     # topological sort
