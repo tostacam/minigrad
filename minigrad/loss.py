@@ -14,7 +14,7 @@ class BCELoss():
     return
   
   def __call__(self, y_pred, y_target):
-    loss = -sum([p.log() if t == 1 else 0 for p, t in zip(y_pred, y_target)])
+    loss = -sum([t * p.log() + (1 - t) * ((1 - p).log()) for p, t in zip(y_pred, y_target)]) / len(y_target)
 
     return loss
   
