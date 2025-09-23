@@ -20,7 +20,7 @@ class Neuron:
   def parameters(self):
     return self.w + [self.b]
   
-  def print_neuron(self, i, type='forward'):
+  def print_neuron(self, i=0, type='forward'):
     if type == 'forward':
       print(f"\033[32mNeuron({i+1}) -> z={(self.z.data if self.z is not None else 0.0):.4f}\033[0m")
     else:
@@ -34,7 +34,7 @@ class Neuron:
     return
   
 class Layer:
-  def __init__(self, nin, nout, activation):
+  def __init__(self, nin, nout, activation='linear'):
     self.neurons = [Neuron(nin) for _ in range(nout)]
     self.nin = nin
     self.nout = nout
@@ -68,7 +68,7 @@ class Layer:
       params.extend(ps)
     return params
   
-  def print_layer(self, i, type='forward'):
+  def print_layer(self, i=0, type='forward'):
     print(f"\033[35m{i+1}.Layer ({self.nin}, {self.nout}){f" -> {self.activation}" if self.activation else ''}:\033[0m")
     for j, neuron in enumerate(self.neurons):
       neuron.print_neuron(j, type)
