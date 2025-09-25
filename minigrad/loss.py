@@ -23,6 +23,13 @@ class CELoss():
     return
 
   def __call__(self, y_pred, y_target):
-    loss = -sum([p.log() if t == 1 else 0 for p, t in zip(y_pred, y_target)])
+      if isinstance(y_target, int):
+          return -y_pred[y_target] + (sum([p.exp() for p in y_pred])).log()
 
-    return loss
+      losses = []
+      for pred, target in zip(y_pred, y_target):
+          if isinstance(pred, list):
+              losses.append(-pred[target] + (sum([p.exp() for p in pred])).log())
+          else:
+              losses.append(-pred + pred.exp().log())
+      return sum(losses) / len(losses)
