@@ -148,8 +148,8 @@ def test_CE():
   print(print_error(f"predictions: {mg_pred}, {pt_pred}"))
   print(mg_loss, pt_loss)
 
-  #assert abs(mg_loss.data - pt_loss.item()) < tol, print_error(f"Loss mismatch: [minigrad: {mg_loss.data}, pytorch: {pt_loss.item()}]")
-  #assert abs(mg_mlp.layers[0].neurons[0].w[0].grad - pt_mlp[0].weight.grad[0,0].item()) < tol, print_error(f"Gradient mismatch: [minigrad: {mg_mlp.layers[0].neurons[0].w[0].grad}, pytorch: {pt_mlp[0].weight.grad[0,0].item()}]")
+  assert abs(mg_loss.data - pt_loss.item()) < tol, print_error(f"Loss mismatch: [minigrad: {mg_loss.data}, pytorch: {pt_loss.item()}]")
+  assert abs(mg_mlp.layers[0].neurons[0].w[0].grad - pt_mlp[0].weight.grad[0,0].item()) < tol, print_error(f"Gradient mismatch: [minigrad: {mg_mlp.layers[0].neurons[0].w[0].grad}, pytorch: {pt_mlp[0].weight.grad[0,0].item()}]")
 
 test_MSE()
 test_BCE()
