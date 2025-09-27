@@ -5,7 +5,7 @@ xs = [1.0, 2.0]
 ys = [1.0, 0.0, 0.0]
 
 # initializing nn and loss
-mg_mlp = mg.MLP(2, [3, 3, 3], ['linear', 'linear', 'softmax'])
+mg_mlp = mg.MLP(2, [3, 3, 3], ['linear', 'linear', 'linear'])
 loss_fn = mg.CELoss()
 
 for k in range(20):
